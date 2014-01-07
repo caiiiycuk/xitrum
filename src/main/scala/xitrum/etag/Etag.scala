@@ -18,9 +18,8 @@ object Etag extends Log {
   case class  TooBig(file: File)                                                                               extends Result
   case class  Small(val bytes: Array[Byte], val etag: String, val mimeo: Option[String], val gzipped: Boolean) extends Result
 
-  //                                                       path    mtime
-  private[this] val smallFileCache        = LocalLruCache[(String, Long), Small](Config.xitrum.staticFile.maxNumberOfCachedFiles)
-  private[this] val gzippedSmallFileCache = LocalLruCache[(String, Long), Small](Config.xitrum.staticFile.maxNumberOfCachedFiles)
+  private[this] val smallFileCache        = LocalLruCache[ResourceKey, Small](Config.xitrum.staticFile.maxNumberOfCachedFiles)
+  private[this] val gzippedSmallFileCache = LocalLruCache[ResourceKey, Small](Config.xitrum.staticFile.maxNumberOfCachedFiles)
 
   /** Etag without quotes is technically illegal. */
   def quote(etag: String) = "\"" + etag + "\""
@@ -44,8 +43,7 @@ object Etag extends Log {
 
     if (file.length > Config.xitrum.staticFile.maxSizeInBytesOfCachedFiles) return TooBig(file)
 
-    val mtime = file.lastModified
-    val key   = (path, mtime)
+    val key   = ResourceKey(file)
     val cache = if (gzipped) gzippedSmallFileCache else smallFileCache
     val value = cache.get(key)
     if (value != null) return value
@@ -65,7 +63,7 @@ object Etag extends Log {
    * No one is stupid enough to store large files in resources.
    */
   def forResource(path: String, gzipped: Boolean): Result = {
-    val key   = ("[resource]" + path, 0l)
+    val key   = ResourceKey("[resource]" + path)
     val cache = if (gzipped) gzippedSmallFileCache else smallFileCache
     val value = cache.get(key)
     if (value != null) return value

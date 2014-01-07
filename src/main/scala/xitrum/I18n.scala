@@ -2,15 +2,16 @@ package xitrum
 
 import scala.util.control.NonFatal
 import org.jboss.netty.handler.codec.http.HttpHeaders
-import HttpHeaders.Names
-
+import org.jboss.netty.handler.codec.http.HttpHeaders.Names
 import xitrum.i18n.PoLoader
+import java.io.File
 
 trait I18n {
   this: Action =>
 
-  private var language = "en"
-  private var po       = PoLoader.load("en")
+  private val lookupFolders = Config.xitrum.i18n.map(_.lookupFolders).getOrElse(Seq.empty[File])
+  private var language      = "en"
+  private var po            = PoLoader.get("en", lookupFolders)
 
   /** Default language is "en". */
   def getLanguage = language
@@ -38,7 +39,7 @@ trait I18n {
 
   def setLanguage(language: String) {
     this.language = language
-    po = PoLoader.load(language)
+    po = PoLoader.get(language, lookupFolders)
   }
 
   /** If there's no suitable language, language is still the default "en". */

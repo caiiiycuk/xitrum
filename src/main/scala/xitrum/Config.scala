@@ -140,6 +140,14 @@ class RequestConfig(config: TConfig) {
   }
 }
 
+class I18NConfig(config: TConfig) {
+  val lookupFolders = if (config.hasPath("lookupFolders")) {
+    config.getStringList("lookupFolders").asScala.map(new File(_)) 
+  } else {
+    Seq.empty[File]
+  }
+}
+
 class ResponseConfig(config: TConfig) {
   val autoGzip         = config.getBoolean("autoGzip")
   val corsAllowOrigins = if (config.hasPath("corsAllowOrigins")) config.getStringList("corsAllowOrigins").asScala else Seq.empty[String]
@@ -235,6 +243,8 @@ class Config(val config: TConfig) extends Log {
   val request = new RequestConfig(config.getConfig("request"))
 
   val response = new ResponseConfig(config.getConfig("response"))
+  
+  val i18n = if (config.hasPath("i18n")) Some(new I18NConfig(config.getConfig("i18n"))) else None
 
   val swaggerApiVersion = if (config.hasPath("swaggerApiVersion")) Some(config.getString("swaggerApiVersion")) else None
 }

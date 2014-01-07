@@ -1,0 +1,2 @@
+msgid "test_message"
+msgstr "I18N test message"
